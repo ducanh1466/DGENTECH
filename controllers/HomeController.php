@@ -4,6 +4,8 @@ class HomeController
 {
     public function index() 
     {
-        require_once PATH_VIEW . 'main.php';
+        $title = 'DGENTECH - Cửa hàng điện tử';
+        $view = 'client/home';
+        require_once PATH_VIEW_MAIN;
     }
 }
