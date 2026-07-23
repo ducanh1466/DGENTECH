@@ -118,7 +118,10 @@
                             <span class="text-gradient" style="font-size:1.3rem;" id="checkoutTotal">0₫</span>
                         </div>
 
-                        <button type="submit" class="btn btn-accent w-100 mt-3 py-3" style="font-size:1.05rem;">
+                        <!-- Hidden input to pass cart data to server -->
+                        <input type="hidden" name="cart_data" id="cartDataInput">
+
+                        <button type="submit" class="btn btn-accent w-100 mt-3 py-3" style="font-size:1.05rem;" onclick="document.getElementById('cartDataInput').value = localStorage.getItem('dgentech-cart') || '[]'">
                             <i class="bi bi-check-circle me-1"></i> Đặt hàng
                         </button>
 

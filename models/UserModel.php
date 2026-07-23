@@ -1,0 +1,83 @@
+<?php
+
+class UserModel extends BaseModel
+{
+    public function __construct()
+    {
+        parent::__construct();
+        $this->table = 'tb_users';
+    }
+
+    public function getAllUsers()
+    {
+        $sql = "SELECT * FROM {$this->table} ORDER BY user_id DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserById($id)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE user_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch();
+    }
+
+    public function getUserByEmail($email)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE email = :email LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['email' => $email]);
+        return $stmt->fetch();
+    }
+
+    public function insertUser($full_name, $email, $password, $phone = null, $address = null, $role = 0, $status = 1)
+    {
+        $sql = "INSERT INTO {$this->table} (full_name, email, password, phone, address, role, status) 
+                VALUES (:full_name, :email, :password, :phone, :address, :role, :status)";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'full_name' => $full_name,
+            'email' => $email,
+            'password' => $password, // remember to hash this before calling
+            'phone' => $phone,
+            'address' => $address,
+            'role' => $role,
+            'status' => $status
+        ]);
+    }
+
+    public function updateUser($id, $full_name, $phone, $address, $status, $role)
+    {
+        $sql = "UPDATE {$this->table} 
+                SET full_name = :full_name, phone = :phone, address = :address, status = :status, role = :role 
+                WHERE user_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'id' => $id,
+            'full_name' => $full_name,
+            'phone' => $phone,
+            'address' => $address,
+            'status' => $status,
+            'role' => $role
+        ]);
+    }
+
+    public function updatePassword($id, $new_password)
+    {
+        $sql = "UPDATE {$this->table} SET password = :password WHERE user_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'password' => $new_password,
+            'id' => $id
+        ]);
+    }
+
+    public function deleteUser($id)
+    {
+        $sql = "DELETE FROM {$this->table} WHERE user_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['id' => $id]);
+    }
+}

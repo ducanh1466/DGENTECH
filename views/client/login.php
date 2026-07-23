@@ -8,6 +8,13 @@
         <h2 class="auth-title">Đăng nhập</h2>
         <p class="auth-subtitle">Chào mừng bạn quay trở lại!</p>
 
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+        <?php endif; ?>
+
         <form method="POST" action="">
             <div class="mb-3">
                 <label class="form-label">Email</label>

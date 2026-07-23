@@ -1,3 +1,7 @@
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+<?php endif; ?>
+
 <div class="admin-table-card">
     <div class="card-header-custom">
         <h6><i class="bi bi-people me-2"></i>Quản lý người dùng</h6>
@@ -24,59 +28,114 @@
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $users = [
-                    ['id' => 1, 'name' => 'Admin', 'email' => 'admin@dgentech.vn', 'phone' => '0900000001', 'role' => 'Admin', 'date' => '01/01/2026', 'status' => 'active'],
-                    ['id' => 2, 'name' => 'Nguyễn Văn A', 'email' => 'nguyenvana@gmail.com', 'phone' => '0912345678', 'role' => 'Khách hàng', 'date' => '15/03/2026', 'status' => 'active'],
-                    ['id' => 3, 'name' => 'Trần Thị B', 'email' => 'tranthib@gmail.com', 'phone' => '0987654321', 'role' => 'Khách hàng', 'date' => '20/04/2026', 'status' => 'active'],
-                    ['id' => 4, 'name' => 'Lê Văn C', 'email' => 'levanc@gmail.com', 'phone' => '0909123456', 'role' => 'Khách hàng', 'date' => '05/05/2026', 'status' => 'active'],
-                    ['id' => 5, 'name' => 'Phạm Thị D', 'email' => 'phamthid@gmail.com', 'phone' => '0933456789', 'role' => 'Khách hàng', 'date' => '10/06/2026', 'status' => 'inactive'],
-                    ['id' => 6, 'name' => 'Hoàng Văn E', 'email' => 'hoangvane@gmail.com', 'phone' => '0911222333', 'role' => 'Khách hàng', 'date' => '12/07/2026', 'status' => 'active'],
-                ];
-                foreach ($users as $i => $user):
-                ?>
-                <tr>
-                    <td class="fw-semibold"><?= $i + 1 ?></td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div style="width:34px;height:34px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.8rem;">
-                                <?= mb_substr($user['name'], 0, 1) ?>
+                <?php if (empty($users)): ?>
+                    <tr><td colspan="8" class="text-center">Chưa có người dùng nào.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($users as $i => $user): ?>
+                    <tr>
+                        <td class="fw-semibold"><?= $i + 1 ?></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:34px;height:34px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.8rem;">
+                                    <?= mb_substr(htmlspecialchars($user['full_name']), 0, 1) ?>
+                                </div>
+                                <span class="fw-semibold"><?= htmlspecialchars($user['full_name']) ?></span>
                             </div>
-                            <span class="fw-semibold"><?= $user['name'] ?></span>
-                        </div>
-                    </td>
-                    <td class="text-secondary"><?= $user['email'] ?></td>
-                    <td><?= $user['phone'] ?></td>
-                    <td>
-                        <?php if ($user['role'] === 'Admin'): ?>
-                            <span class="badge bg-primary rounded-pill">Admin</span>
-                        <?php else: ?>
-                            <span class="badge bg-secondary rounded-pill">Khách hàng</span>
-                        <?php endif; ?>
-                    </td>
-                    <td class="text-secondary"><?= $user['date'] ?></td>
-                    <td><span class="status-badge <?= $user['status'] ?>"><?= $user['status'] === 'active' ? 'Hoạt động' : 'Vô hiệu' ?></span></td>
-                    <td>
-                        <div class="table-actions">
-                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash3"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+                        </td>
+                        <td class="text-secondary"><?= htmlspecialchars($user['email']) ?></td>
+                        <td><?= htmlspecialchars($user['phone'] ?? '') ?></td>
+                        <td>
+                            <?php if ($user['role'] == 1): ?>
+                                <span class="badge bg-primary rounded-pill">Admin</span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary rounded-pill">Khách hàng</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-secondary"><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
+                        <td>
+                            <span class="status-badge <?= $user['status'] == 1 ? 'active' : 'inactive' ?>">
+                                <?= $user['status'] == 1 ? 'Hoạt động' : 'Vô hiệu' ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editUser(<?= $user['user_id'] ?>, <?= $user['status'] ?>, <?= $user['role'] ?>)" data-bs-toggle="modal" data-bs-target="#userModal"><i class="bi bi-pencil"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
+</div>
 
-    <div class="d-flex justify-content-between align-items-center p-3 border-top" style="border-color:var(--border-light)!important">
-        <span class="text-muted" style="font-size:0.85rem;">Hiển thị 1-6 trên 1,289 người dùng</span>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a></li>
-            </ul>
-        </nav>
+<!-- User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="">
+                <input type="hidden" name="action_type" id="userActionType" value="update_status">
+                <input type="hidden" name="user_id" id="modalUserId" value="">
+                
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Cập nhật</label>
+                        <select class="form-select" id="updateTypeSelect" onchange="document.getElementById('userActionType').value = this.value; toggleUserInputs();" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                            <option value="update_status">Trạng thái</option>
+                            <option value="update_role">Phân quyền</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="statusInputGroup">
+                        <label class="form-label fw-semibold">Trạng thái</label>
+                        <select class="form-select" name="status" id="modalUserStatus" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                            <option value="1">Hoạt động</option>
+                            <option value="0">Vô hiệu</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="roleInputGroup">
+                        <label class="form-label fw-semibold">Vai trò</label>
+                        <select class="form-select" name="role" id="modalUserRole" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                            <option value="1">Admin</option>
+                            <option value="0">Khách hàng</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-accent">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+function editUser(id, status, role) {
+    document.getElementById('modalUserId').value = id;
+    document.getElementById('modalUserStatus').value = status;
+    document.getElementById('modalUserRole').value = role;
+    
+    // Reset to status update by default when opening
+    document.getElementById('updateTypeSelect').value = 'update_status';
+    document.getElementById('userActionType').value = 'update_status';
+    toggleUserInputs();
+}
+
+function toggleUserInputs() {
+    const type = document.getElementById('updateTypeSelect').value;
+    if (type === 'update_status') {
+        document.getElementById('statusInputGroup').classList.remove('d-none');
+        document.getElementById('roleInputGroup').classList.add('d-none');
+    } else {
+        document.getElementById('statusInputGroup').classList.add('d-none');
+        document.getElementById('roleInputGroup').classList.remove('d-none');
+    }
+}
+</script>

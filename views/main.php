@@ -69,9 +69,25 @@
                     </a>
 
                     <!-- User -->
-                    <a href="<?= BASE_URL ?>?action=login" class="btn-icon" aria-label="Tài khoản">
-                        <i class="bi bi-person"></i>
-                    </a>
+                    <?php if (isset($_SESSION['user'])): ?>
+                        <div class="dropdown">
+                            <a href="#" class="btn-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">
+                                <i class="bi bi-person-check-fill text-accent"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <?php if ($_SESSION['user']['role'] == 1): ?>
+                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?action=admin">Quản trị Admin</a></li>
+                                <?php endif; ?>
+                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?action=account">Tài khoản của tôi</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>?action=logout">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    <?php else: ?>
+                        <a href="<?= BASE_URL ?>?action=login" class="btn-icon" aria-label="Tài khoản">
+                            <i class="bi bi-person"></i>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

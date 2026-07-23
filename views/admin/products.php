@@ -26,35 +26,36 @@
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $products = [
-                    ['id' => 1, 'name' => 'iPhone 16 Pro Max 256GB', 'category' => 'Điện thoại', 'price' => 34990000, 'status' => 'active', 'image' => 'https://placehold.co/60x60/4361ee/ffffff?text=IP16'],
-                    ['id' => 2, 'name' => 'MacBook Air M3 15 inch', 'category' => 'Laptop', 'price' => 32990000, 'status' => 'active', 'image' => 'https://placehold.co/60x60/7c3aed/ffffff?text=MB'],
-                    ['id' => 3, 'name' => 'Samsung Galaxy S25 Ultra', 'category' => 'Điện thoại', 'price' => 30990000, 'status' => 'active', 'image' => 'https://placehold.co/60x60/059669/ffffff?text=S25'],
-                    ['id' => 4, 'name' => 'iPad Pro M4 11 inch', 'category' => 'Tablet', 'price' => 28990000, 'status' => 'active', 'image' => 'https://placehold.co/60x60/ec4899/ffffff?text=iPad'],
-                    ['id' => 5, 'name' => 'AirPods Pro 3', 'category' => 'Phụ kiện', 'price' => 6990000, 'status' => 'inactive', 'image' => 'https://placehold.co/60x60/f59e0b/ffffff?text=AP3'],
-                    ['id' => 6, 'name' => 'Dell XPS 16 9640', 'category' => 'Laptop', 'price' => 45990000, 'status' => 'active', 'image' => 'https://placehold.co/60x60/0891b2/ffffff?text=XPS'],
-                ];
-                foreach ($products as $i => $p):
-                ?>
-                <tr>
-                    <td class="fw-semibold"><?= $i + 1 ?></td>
-                    <td><img src="<?= $p['image'] ?>" class="product-thumb" alt=""></td>
-                    <td>
-                        <div class="fw-semibold"><?= $p['name'] ?></div>
-                        <small class="text-muted">ID: #<?= $p['id'] ?></small>
-                    </td>
-                    <td><?= $p['category'] ?></td>
-                    <td class="fw-bold"><?= number_format($p['price'], 0, ',', '.') ?>₫</td>
-                    <td><span class="status-badge <?= $p['status'] ?>"><?= $p['status'] === 'active' ? 'Hiển thị' : 'Ẩn' ?></span></td>
-                    <td>
-                        <div class="table-actions">
-                            <a href="<?= BASE_URL ?>?action=admin-product-edit&id=<?= $p['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                            <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash3"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+                <?php if (empty($products)): ?>
+                    <tr><td colspan="7" class="text-center">Chưa có sản phẩm nào.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($products as $i => $p): ?>
+                    <tr>
+                        <td class="fw-semibold"><?= $i + 1 ?></td>
+                        <td><img src="https://placehold.co/60x60/e2e8f0/64748b?text=IMG" class="product-thumb" alt=""></td>
+                        <td>
+                            <div class="fw-semibold"><?= htmlspecialchars($p['product_name']) ?></div>
+                            <small class="text-muted">ID: #<?= $p['product_id'] ?></small>
+                        </td>
+                        <td><?= htmlspecialchars($p['category_name'] ?? 'N/A') ?></td>
+                        <td class="fw-bold">
+                            <!-- Prices will be loaded from variants later -->
+                            <small class="text-muted">N/A</small>
+                        </td>
+                        <td><span class="status-badge <?= $p['status'] ?>"><?= $p['status'] === 'active' ? 'Hiển thị' : 'Ẩn' ?></span></td>
+                        <td>
+                            <div class="table-actions">
+                                <a href="<?= BASE_URL ?>?action=admin-product-edit&id=<?= $p['product_id'] ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                <form method="POST" action="" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
+                                    <input type="hidden" name="action_type" value="delete">
+                                    <input type="hidden" name="product_id" value="<?= $p['product_id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

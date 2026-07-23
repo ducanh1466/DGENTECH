@@ -56,6 +56,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?= ($action ?? '') === 'admin-brands' ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-brands">
+                            <i class="bi bi-star"></i> Thương hiệu
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?= in_array($action ?? '', ['admin-orders', 'admin-order-detail']) ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-orders">
                             <i class="bi bi-receipt"></i> Đơn hàng
                         </a>
@@ -84,10 +89,10 @@
 
             <div class="sidebar-footer">
                 <div class="admin-user">
-                    <div class="admin-avatar">A</div>
+                    <div class="admin-avatar"><?= substr($_SESSION['user']['full_name'] ?? 'A', 0, 1) ?></div>
                     <div class="admin-info">
-                        <span>Admin</span>
-                        <small>admin@dgentech.vn</small>
+                        <span><?= $_SESSION['user']['full_name'] ?? 'Admin' ?></span>
+                        <small><?= $_SESSION['user']['email'] ?? 'admin@dgentech.vn' ?></small>
                     </div>
                 </div>
             </div>
@@ -116,7 +121,7 @@
                         <i class="bi bi-moon-fill icon-moon"></i>
                         <i class="bi bi-sun-fill icon-sun"></i>
                     </button>
-                    <a href="<?= BASE_URL ?>?action=login" class="btn btn-sm btn-outline-danger rounded-pill">
+                    <a href="<?= BASE_URL ?>?action=logout" class="btn btn-sm btn-outline-danger rounded-pill">
                         <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
                     </a>
                 </div>

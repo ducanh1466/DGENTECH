@@ -18,8 +18,8 @@
                 <div class="account-sidebar">
                     <div class="account-header">
                         <div class="account-avatar"><i class="bi bi-person-fill"></i></div>
-                        <h6 class="mb-0 mt-1" style="color:#fff;">Nguyễn Văn A</h6>
-                        <small style="opacity:0.8;">user@dgentech.vn</small>
+                        <h6 class="mb-0 mt-1" style="color:#fff;"><?= htmlspecialchars($user['full_name']) ?></h6>
+                        <small style="opacity:0.8;"><?= htmlspecialchars($user['email']) ?></small>
                     </div>
                     <nav class="nav flex-column">
                         <a class="nav-link active" href="#profile" data-bs-toggle="tab">
@@ -31,7 +31,7 @@
                         <a class="nav-link" href="#password" data-bs-toggle="tab">
                             <i class="bi bi-key"></i> Đổi mật khẩu
                         </a>
-                        <a class="nav-link text-danger" href="<?= BASE_URL ?>?action=login">
+                        <a class="nav-link text-danger" href="<?= BASE_URL ?>?action=logout">
                             <i class="bi bi-box-arrow-right"></i> Đăng xuất
                         </a>
                     </nav>
@@ -41,31 +41,30 @@
             <!-- Content -->
             <div class="col-lg-9">
                 <div class="tab-content">
+                    <?php if (isset($_SESSION['success'])): ?>
+                        <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+                    <?php endif; ?>
                     <!-- Profile Tab -->
                     <div class="tab-pane fade show active" id="profile">
                         <div class="account-content">
                             <h5 class="fw-bold mb-4"><i class="bi bi-person-gear me-2"></i>Thông tin cá nhân</h5>
-                            <form>
+                            <form method="POST" action="">
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Họ và tên</label>
-                                        <input type="text" class="form-control" value="Nguyễn Văn A" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                                        <input type="text" class="form-control" name="fullname" value="<?= htmlspecialchars($user['full_name']) ?>" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Email</label>
-                                        <input type="email" class="form-control" value="user@dgentech.vn" readonly style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-secondary);color:var(--text-secondary);">
+                                        <input type="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" readonly style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-secondary);color:var(--text-secondary);">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Số điện thoại</label>
-                                        <input type="tel" class="form-control" value="0912 345 678" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                                        <input type="tel" class="form-control" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Ngày sinh</label>
-                                        <input type="date" class="form-control" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold">Địa chỉ</label>
-                                        <input type="text" class="form-control" placeholder="Nhập địa chỉ..." style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                                        <label class="form-label fw-semibold">Vai trò</label>
+                                        <input type="text" class="form-control" value="<?= $user['role'] == 'admin' ? 'Quản trị viên' : 'Khách hàng' ?>" readonly style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-secondary);color:var(--text-secondary);">
                                     </div>
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg me-1"></i> Cập nhật</button>
@@ -87,24 +86,31 @@
                                             <th>Ngày đặt</th>
                                             <th>Tổng tiền</th>
                                             <th>Trạng thái</th>
-                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td class="fw-semibold">#DH001</td>
-                                            <td>20/07/2026</td>
-                                            <td class="fw-bold">34.990.000₫</td>
-                                            <td><span class="status-badge shipping">Đang giao</span></td>
-                                            <td><a href="#" class="btn btn-sm btn-outline-accent rounded-pill">Chi tiết</a></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="fw-semibold">#DH002</td>
-                                            <td>15/07/2026</td>
-                                            <td class="fw-bold">8.490.000₫</td>
-                                            <td><span class="status-badge completed">Hoàn thành</span></td>
-                                            <td><a href="#" class="btn btn-sm btn-outline-accent rounded-pill">Chi tiết</a></td>
-                                        </tr>
+                                        <?php if (empty($orders)): ?>
+                                            <tr><td colspan="4" class="text-center text-muted">Bạn chưa có đơn hàng nào.</td></tr>
+                                        <?php else: foreach ($orders as $order): ?>
+                                            <tr>
+                                                <td class="fw-semibold">#<?= $order['order_id'] ?></td>
+                                                <td><?= date('d/m/Y H:i', strtotime($order['order_date'])) ?></td>
+                                                <td class="fw-bold"><?= number_format($order['total_amount'], 0, ',', '.') ?>₫</td>
+                                                <td>
+                                                    <?php 
+                                                        $statusMap = [
+                                                            'pending' => 'Chờ xử lý',
+                                                            'confirmed' => 'Đã xác nhận',
+                                                            'shipping' => 'Đang giao',
+                                                            'completed' => 'Hoàn thành',
+                                                            'cancelled' => 'Đã hủy'
+                                                        ];
+                                                        $stText = $statusMap[$order['status']] ?? 'Không rõ';
+                                                    ?>
+                                                    <span class="status-badge <?= htmlspecialchars($order['status']) ?>"><?= $stText ?></span>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -137,3 +143,13 @@
         </div>
     </div>
 </section>
+
+<?php if (isset($_SESSION['clear_cart'])): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof DGENCart !== 'undefined') {
+        DGENCart.clearCart();
+    }
+});
+</script>
+<?php unset($_SESSION['clear_cart']); endif; ?>

@@ -1,3 +1,7 @@
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+<?php endif; ?>
+
 <div class="admin-table-card">
     <div class="card-header-custom">
         <h6><i class="bi bi-receipt me-2"></i>Quản lý đơn hàng</h6>
@@ -31,47 +35,83 @@
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $orders = [
-                    ['id' => 'DH156', 'customer' => 'Nguyễn Văn A', 'phone' => '0912345678', 'items' => 1, 'total' => 34990000, 'status' => 'pending', 'status_text' => 'Chờ xử lý', 'date' => '21/07/2026'],
-                    ['id' => 'DH155', 'customer' => 'Trần Thị B', 'phone' => '0987654321', 'items' => 2, 'total' => 8490000, 'status' => 'confirmed', 'status_text' => 'Đã xác nhận', 'date' => '20/07/2026'],
-                    ['id' => 'DH154', 'customer' => 'Lê Văn C', 'phone' => '0909123456', 'items' => 1, 'total' => 22990000, 'status' => 'shipping', 'status_text' => 'Đang giao', 'date' => '19/07/2026'],
-                    ['id' => 'DH153', 'customer' => 'Phạm Thị D', 'phone' => '0933456789', 'items' => 1, 'total' => 6990000, 'status' => 'completed', 'status_text' => 'Hoàn thành', 'date' => '18/07/2026'],
-                    ['id' => 'DH152', 'customer' => 'Hoàng Văn E', 'phone' => '0911222333', 'items' => 3, 'total' => 45990000, 'status' => 'completed', 'status_text' => 'Hoàn thành', 'date' => '17/07/2026'],
-                    ['id' => 'DH151', 'customer' => 'Vũ Thị F', 'phone' => '0944555666', 'items' => 1, 'total' => 24990000, 'status' => 'cancelled', 'status_text' => 'Đã hủy', 'date' => '16/07/2026'],
-                ];
-                foreach ($orders as $order):
-                ?>
-                <tr>
-                    <td class="fw-bold">#<?= $order['id'] ?></td>
-                    <td>
-                        <div class="fw-semibold"><?= $order['customer'] ?></div>
-                        <small class="text-muted"><?= $order['phone'] ?></small>
-                    </td>
-                    <td><?= $order['items'] ?> sản phẩm</td>
-                    <td class="fw-bold"><?= number_format($order['total'], 0, ',', '.') ?>₫</td>
-                    <td><span class="status-badge <?= $order['status'] ?>"><?= $order['status_text'] ?></span></td>
-                    <td class="text-secondary"><?= $order['date'] ?></td>
-                    <td>
-                        <a href="<?= BASE_URL ?>?action=admin-order-detail&id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i> Chi tiết
-                        </a>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+                <?php if (empty($orders)): ?>
+                    <tr><td colspan="7" class="text-center">Chưa có đơn hàng nào.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($orders as $order): ?>
+                    <tr>
+                        <td class="fw-bold">#<?= $order['order_id'] ?></td>
+                        <td>
+                            <div class="fw-semibold"><?= htmlspecialchars($order['recipient_name']) ?></div>
+                            <small class="text-muted"><?= htmlspecialchars($order['recipient_phone']) ?></small>
+                        </td>
+                        <td>...</td> <!-- Items count needs detail fetch -->
+                        <td class="fw-bold"><?= number_format($order['total_amount'], 0, ',', '.') ?>₫</td>
+                        <td>
+                            <?php 
+                                $statusMap = [
+                                    'pending' => 'Chờ xử lý',
+                                    'confirmed' => 'Đã xác nhận',
+                                    'shipping' => 'Đang giao',
+                                    'completed' => 'Hoàn thành',
+                                    'cancelled' => 'Đã hủy'
+                                ];
+                                $stText = $statusMap[$order['status']] ?? 'Không rõ';
+                            ?>
+                            <span class="status-badge <?= htmlspecialchars($order['status']) ?>"><?= $stText ?></span>
+                        </td>
+                        <td class="text-secondary"><?= date('d/m/Y H:i', strtotime($order['order_date'])) ?></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editOrderStatus(<?= $order['order_id'] ?>, '<?= $order['status'] ?>')" data-bs-toggle="modal" data-bs-target="#orderModal"><i class="bi bi-pencil"></i> Cập nhật</button>
+                                <a href="<?= BASE_URL ?>?action=admin-order-detail&id=<?= $order['order_id'] ?>" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
+</div>
 
-    <div class="d-flex justify-content-between align-items-center p-3 border-top" style="border-color:var(--border-light)!important">
-        <span class="text-muted" style="font-size:0.85rem;">Hiển thị 1-6 trên 156 đơn hàng</span>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a></li>
-            </ul>
-        </nav>
+<!-- Order Status Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật trạng thái đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="">
+                <input type="hidden" name="order_id" id="modalOrderId" value="">
+                
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Trạng thái</label>
+                        <select class="form-select" name="status" id="modalOrderStatus" style="border:2px solid var(--border-color);border-radius:var(--radius-md);padding:10px 14px;background:var(--bg-primary);color:var(--text-primary);">
+                            <option value="pending">Chờ xử lý</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                            <option value="shipping">Đang giao</option>
+                            <option value="completed">Hoàn thành</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-accent">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+function editOrderStatus(id, status) {
+    document.getElementById('modalOrderId').value = id;
+    document.getElementById('modalOrderStatus').value = status;
+}
+</script>

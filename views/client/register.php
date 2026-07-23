@@ -8,10 +8,14 @@
         <h2 class="auth-title">Tạo tài khoản</h2>
         <p class="auth-subtitle">Đăng ký để nhận ưu đãi độc quyền</p>
 
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+        <?php endif; ?>
+
         <form method="POST" action="">
             <div class="mb-3">
                 <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="fullname" placeholder="Nguyễn Văn A" required>
+                <input type="text" class="form-control" name="full_name" placeholder="Nguyễn Văn A" required>
             </div>
             <div class="mb-3">
                 <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -27,7 +31,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Nhập lại mật khẩu <span class="text-danger">*</span></label>
-                <input type="password" class="form-control" name="password_confirm" placeholder="Nhập lại mật khẩu" required>
+                <input type="password" class="form-control" name="confirm_password" placeholder="Nhập lại mật khẩu" required>
             </div>
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" id="agreeTerms" required>
