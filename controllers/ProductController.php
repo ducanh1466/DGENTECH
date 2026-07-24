@@ -4,6 +4,9 @@ class ProductController
 {
     public function index()
     {
+        $productModel = new ProductModel();
+        $products = $productModel->getAllProducts();
+        
         $title = 'Sản phẩm - DGENTECH';
         $view = 'client/products';
         require_once PATH_VIEW_MAIN;

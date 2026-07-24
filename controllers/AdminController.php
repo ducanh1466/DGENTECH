@@ -21,7 +21,7 @@ class AdminController
     public function products()
     {
         $productModel = new ProductModel();
-        
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action_type = $_POST['action_type'] ?? '';
             if ($action_type === 'delete') {
@@ -53,6 +53,9 @@ class AdminController
 
         if ($id) {
             $product = $productModel->getProductById($id);
+            $variants = $productModel->getVariantsByProductId($id);
+        } else {
+            $variants = [];
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -62,17 +65,52 @@ class AdminController
             $warranty_period = $_POST['warranty_period'] ?? null;
             $description = $_POST['description'] ?? '';
             $status = $_POST['status'] ?? 'active';
+            $price = $_POST['price'] ?? 0;
+            $ram = $_POST['ram'] ?? null;
+            $screen = $_POST['screen'] ?? null;
+            $refresh_rate = $_POST['refresh_rate'] ?? null;
+
+            // Handle file upload
+            $image_path = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $upload_dir = 'uploads/products/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+
+                $file_name = time() . '_' . basename($_FILES['image']['name']);
+                $target_file = $upload_dir . $file_name;
+
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
+                    $image_path = BASE_URL . $target_file;
+                }
+            }
 
             if ($id) {
                 // Update
-                $productModel->updateProduct($id, $category_id, $product_name, $brand_id, $warranty_period, $description, $status);
+                $productModel->updateProduct($id, $category_id, $product_name, $brand_id, $warranty_period, $description, $status, $image_path, $price, $ram, $screen, $refresh_rate);
                 $_SESSION['success'] = 'Cập nhật sản phẩm thành công!';
             } else {
                 // Create
-                $productModel->insertProduct($category_id, $product_name, $brand_id, $warranty_period, $description, $status);
+                $id = $productModel->insertProduct($category_id, $product_name, $brand_id, $warranty_period, $description, $status, $image_path, $price, $ram, $screen, $refresh_rate);
                 $_SESSION['success'] = 'Thêm sản phẩm thành công!';
             }
+
+            // Process variants
+            $variant_names = $_POST['variant_name'] ?? [];
+            $variant_stocks = $_POST['variant_stock'] ?? [];
             
+            $productModel->deleteVariantsByProductId($id);
+            if (!empty($variant_names) && is_array($variant_names)) {
+                for ($i = 0; $i < count($variant_names); $i++) {
+                    $v_name = trim($variant_names[$i]);
+                    $v_stock = isset($variant_stocks[$i]) ? (int)$variant_stocks[$i] : 0;
+                    if ($v_name !== '') {
+                        $productModel->insertVariant($id, $v_name, 0, $v_stock);
+                    }
+                }
+            }
+
             header('Location: ' . BASE_URL . '?action=admin-products');
             exit;
         }
@@ -93,7 +131,7 @@ class AdminController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action_type = $_POST['action_type'] ?? 'create';
-            
+
             if ($action_type === 'create') {
                 $name = $_POST['name'] ?? '';
                 $description = $_POST['description'] ?? '';
@@ -110,7 +148,7 @@ class AdminController
                 $categoryModel->deleteCategory($id);
                 $_SESSION['success'] = 'Xóa danh mục thành công!';
             }
-            
+
             header('Location: ' . BASE_URL . '?action=admin-categories');
             exit;
         }
@@ -130,7 +168,7 @@ class AdminController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action_type = $_POST['action_type'] ?? 'create';
-            
+
             if ($action_type === 'create') {
                 $name = $_POST['name'] ?? '';
                 $description = $_POST['description'] ?? '';
@@ -149,7 +187,7 @@ class AdminController
                 $brandModel->deleteBrand($id);
                 $_SESSION['success'] = 'Xóa thương hiệu thành công!';
             }
-            
+
             header('Location: ' . BASE_URL . '?action=admin-brands');
             exit;
         }
@@ -166,11 +204,11 @@ class AdminController
     public function orders()
     {
         $orderModel = new OrderModel();
-        
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $order_id = $_POST['order_id'] ?? 0;
             $status = $_POST['status'] ?? 'pending';
-            
+
             $orderModel->updateOrderStatus($order_id, $status);
             $_SESSION['success'] = 'Cập nhật trạng thái đơn hàng thành công!';
             header('Location: ' . BASE_URL . '?action=admin-orders');
@@ -190,7 +228,7 @@ class AdminController
     {
         $orderModel = new OrderModel();
         $id = $_GET['id'] ?? 0;
-        
+
         $order = $orderModel->getOrderById($id);
         if (!$order) {
             header('Location: ' . BASE_URL . '?action=admin-orders');
@@ -214,7 +252,7 @@ class AdminController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action_type = $_POST['action_type'] ?? '';
             $user_id = $_POST['user_id'] ?? 0;
-            
+
             if ($action_type === 'update_status') {
                 $status = $_POST['status'] ?? 0;
                 $user = $userModel->getUserById($user_id);
@@ -230,7 +268,7 @@ class AdminController
                     $_SESSION['success'] = 'Cập nhật phân quyền thành công!';
                 }
             }
-            
+
             header('Location: ' . BASE_URL . '?action=admin-users');
             exit;
         }

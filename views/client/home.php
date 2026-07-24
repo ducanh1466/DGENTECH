@@ -136,12 +136,12 @@
                     <!-- badge omitted for now -->
                     <div class="product-img-wrapper">
                         <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>">
-                            <img src="https://placehold.co/400x400/e2e8f0/64748b?text=<?= urlencode($p['product_name']) ?>" alt="<?= htmlspecialchars($p['product_name']) ?>">
+                            <img src="<?= !empty($p['image']) ? htmlspecialchars($p['image']) : 'https://placehold.co/400x400/e2e8f0/64748b?text=' . urlencode($p['product_name']) ?>" alt="<?= htmlspecialchars($p['product_name']) ?>">
                         </a>
                         <div class="product-actions-overlay">
                             <button class="btn-icon btn-add-to-cart" data-bs-toggle="tooltip" title="Thêm vào giỏ"
                                 data-id="<?= $p['product_id'] ?>" data-name="<?= htmlspecialchars($p['product_name']) ?>" data-price="<?= $p['price'] ?? 0 ?>"
-                                data-image="https://placehold.co/400x400/e2e8f0/64748b?text=<?= urlencode($p['product_name']) ?>" data-category="<?= htmlspecialchars($p['category_name']) ?>">
+                                data-image="<?= !empty($p['image']) ? htmlspecialchars($p['image']) : 'https://placehold.co/400x400/e2e8f0/64748b?text=' . urlencode($p['product_name']) ?>" data-category="<?= htmlspecialchars($p['category_name']) ?>">
                                 <i class="bi bi-cart-plus"></i>
                             </button>
                             <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>" class="btn-icon" data-bs-toggle="tooltip" title="Xem chi tiết">
@@ -211,12 +211,12 @@
                     <span class="badge-hot"><i class="bi bi-fire"></i> Hot</span>
                     <div class="product-img-wrapper">
                         <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>">
-                            <img src="https://placehold.co/400x400/1e293b/ffffff?text=<?= urlencode($p['product_name']) ?>" alt="<?= htmlspecialchars($p['product_name']) ?>">
+                            <img src="<?= !empty($p['image']) ? htmlspecialchars($p['image']) : 'https://placehold.co/400x400/1e293b/ffffff?text=' . urlencode($p['product_name']) ?>" alt="<?= htmlspecialchars($p['product_name']) ?>">
                         </a>
                         <div class="product-actions-overlay">
                             <button class="btn-icon btn-add-to-cart" data-bs-toggle="tooltip" title="Thêm vào giỏ"
                                 data-id="<?= $p['product_id'] ?>" data-name="<?= htmlspecialchars($p['product_name']) ?>" data-price="<?= $p['price'] ?? 0 ?>"
-                                data-image="https://placehold.co/400x400/1e293b/ffffff?text=<?= urlencode($p['product_name']) ?>" data-category="<?= htmlspecialchars($p['category_name']) ?>">
+                                data-image="<?= !empty($p['image']) ? htmlspecialchars($p['image']) : 'https://placehold.co/400x400/1e293b/ffffff?text=' . urlencode($p['product_name']) ?>" data-category="<?= htmlspecialchars($p['category_name']) ?>">
                                 <i class="bi bi-cart-plus"></i>
                             </button>
                             <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>" class="btn-icon" data-bs-toggle="tooltip" title="Xem chi tiết">

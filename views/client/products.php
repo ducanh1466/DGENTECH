@@ -118,63 +118,43 @@
 
                 <!-- Products Grid -->
                 <div class="row g-3">
-                    <?php
-                    $products = [
-                        ['id' => '1', 'name' => 'iPhone 16 Pro Max 256GB', 'category' => 'Điện thoại', 'price' => 34990000, 'original_price' => 36990000, 'badge' => 'sale', 'image' => 'https://placehold.co/400x400/4361ee/ffffff?text=iPhone+16'],
-                        ['id' => '2', 'name' => 'MacBook Air M3 15 inch', 'category' => 'Laptop', 'price' => 32990000, 'original_price' => 37990000, 'badge' => 'sale', 'image' => 'https://placehold.co/400x400/7c3aed/ffffff?text=MacBook+M3'],
-                        ['id' => '3', 'name' => 'Samsung Galaxy S25 Ultra', 'category' => 'Điện thoại', 'price' => 30990000, 'original_price' => 33990000, 'badge' => 'new', 'image' => 'https://placehold.co/400x400/059669/ffffff?text=Galaxy+S25'],
-                        ['id' => '4', 'name' => 'iPad Pro M4 11 inch', 'category' => 'Tablet', 'price' => 28990000, 'original_price' => 31990000, 'badge' => 'new', 'image' => 'https://placehold.co/400x400/ec4899/ffffff?text=iPad+Pro'],
-                        ['id' => '5', 'name' => 'AirPods Pro 3', 'category' => 'Phụ kiện', 'price' => 6990000, 'original_price' => 7490000, 'badge' => '', 'image' => 'https://placehold.co/400x400/f59e0b/ffffff?text=AirPods+3'],
-                        ['id' => '6', 'name' => 'Dell XPS 16 9640', 'category' => 'Laptop', 'price' => 45990000, 'original_price' => 49990000, 'badge' => 'sale', 'image' => 'https://placehold.co/400x400/0891b2/ffffff?text=Dell+XPS'],
-                        ['id' => '7', 'name' => 'Apple Watch Ultra 3', 'category' => 'Smartwatch', 'price' => 21990000, 'original_price' => 23990000, 'badge' => 'new', 'image' => 'https://placehold.co/400x400/dc2626/ffffff?text=Watch+Ultra'],
-                        ['id' => '8', 'name' => 'Samsung Galaxy Tab S10', 'category' => 'Tablet', 'price' => 22990000, 'original_price' => 25990000, 'badge' => '', 'image' => 'https://placehold.co/400x400/6366f1/ffffff?text=Tab+S10'],
-                        ['id' => '9', 'name' => 'ASUS ROG Zephyrus G14', 'category' => 'Laptop', 'price' => 38990000, 'original_price' => 42990000, 'badge' => 'sale', 'image' => 'https://placehold.co/400x400/1e293b/ffffff?text=ROG+G14'],
-                        ['id' => '10', 'name' => 'Xiaomi 15 Ultra', 'category' => 'Điện thoại', 'price' => 24990000, 'original_price' => 27990000, 'badge' => 'new', 'image' => 'https://placehold.co/400x400/d946ef/ffffff?text=Xiaomi+15'],
-                        ['id' => '11', 'name' => 'Sony WH-1000XM6', 'category' => 'Phụ kiện', 'price' => 8490000, 'original_price' => 9490000, 'badge' => '', 'image' => 'https://placehold.co/400x400/334155/ffffff?text=Sony+XM6'],
-                        ['id' => '12', 'name' => 'Galaxy Watch 7 Classic', 'category' => 'Smartwatch', 'price' => 7990000, 'original_price' => 8990000, 'badge' => '', 'image' => 'https://placehold.co/400x400/0f766e/ffffff?text=Watch+7'],
-                    ];
-
-                    foreach ($products as $p):
-                    ?>
-                    <div class="col-6 col-md-4">
-                        <div class="product-card">
-                            <?php if ($p['badge'] === 'new'): ?>
-                                <span class="badge-new"><i class="bi bi-stars"></i> Mới</span>
-                            <?php elseif ($p['badge'] === 'sale'): ?>
-                                <span class="badge-sale">-<?= round((1 - $p['price'] / $p['original_price']) * 100) ?>%</span>
-                            <?php endif; ?>
-
-                            <div class="product-img-wrapper">
-                                <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['id'] ?>">
-                                    <img src="<?= $p['image'] ?>" alt="<?= $p['name'] ?>">
-                                </a>
-                                <div class="product-actions-overlay">
-                                    <button class="btn-icon btn-add-to-cart"
-                                        data-id="<?= $p['id'] ?>" data-name="<?= $p['name'] ?>" data-price="<?= $p['price'] ?>"
-                                        data-image="<?= $p['image'] ?>" data-category="<?= $p['category'] ?>">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
-                                    <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['id'] ?>" class="btn-icon">
-                                        <i class="bi bi-eye"></i>
+                    <?php if (empty($products)): ?>
+                        <div class="col-12 text-center">
+                            <p>Không tìm thấy sản phẩm nào.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($products as $p): ?>
+                        <div class="col-6 col-md-4">
+                            <div class="product-card">
+                                <div class="product-img-wrapper">
+                                    <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>">
+                                        <img src="<?= !empty($p['image']) ? htmlspecialchars($p['image']) : 'https://placehold.co/400x400/e2e8f0/64748b?text=' . urlencode($p['product_name']) ?>" alt="<?= htmlspecialchars($p['product_name']) ?>">
                                     </a>
+                                    <div class="product-actions-overlay">
+                                        <button class="btn-icon btn-add-to-cart"
+                                            data-id="<?= $p['product_id'] ?>" data-name="<?= htmlspecialchars($p['product_name']) ?>" data-price="<?= $p['price'] ?? 0 ?>"
+                                            data-image="<?= !empty($p['image']) ? htmlspecialchars($p['image']) : 'https://placehold.co/400x400/e2e8f0/64748b?text=' . urlencode($p['product_name']) ?>" data-category="<?= htmlspecialchars($p['category_name'] ?? '') ?>">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                        <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>" class="btn-icon">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="product-info">
-                                <span class="product-category"><?= $p['category'] ?></span>
-                                <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['id'] ?>" class="product-name"><?= $p['name'] ?></a>
-                                <div class="product-rating">
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                                </div>
-                                <div class="product-price-wrapper">
-                                    <span class="price-sale"><?= number_format($p['price'], 0, ',', '.') ?>₫</span>
-                                    <?php if ($p['original_price'] > $p['price']): ?>
-                                    <span class="price-original"><?= number_format($p['original_price'], 0, ',', '.') ?>₫</span>
-                                    <?php endif; ?>
+                                <div class="product-info">
+                                    <span class="product-category"><?= htmlspecialchars($p['category_name'] ?? '') ?></span>
+                                    <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>" class="product-name"><?= htmlspecialchars($p['product_name']) ?></a>
+                                    <div class="product-rating">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                                    </div>
+                                    <div class="product-price-wrapper">
+                                        <span class="price-sale"><?= number_format($p['price'] ?? 0, 0, ',', '.') ?>₫</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Pagination -->

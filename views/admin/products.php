@@ -32,15 +32,20 @@
                     <?php foreach ($products as $i => $p): ?>
                     <tr>
                         <td class="fw-semibold"><?= $i + 1 ?></td>
-                        <td><img src="https://placehold.co/60x60/e2e8f0/64748b?text=IMG" class="product-thumb" alt=""></td>
+                        <td>
+                            <?php if (!empty($p['image'])): ?>
+                                <img src="<?= htmlspecialchars($p['image']) ?>" class="product-thumb" alt="" style="width:60px; height:60px; object-fit:cover; border-radius:var(--radius-sm);">
+                            <?php else: ?>
+                                <img src="https://placehold.co/60x60/e2e8f0/64748b?text=IMG" class="product-thumb" alt="">
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <div class="fw-semibold"><?= htmlspecialchars($p['product_name']) ?></div>
                             <small class="text-muted">ID: #<?= $p['product_id'] ?></small>
                         </td>
                         <td><?= htmlspecialchars($p['category_name'] ?? 'N/A') ?></td>
                         <td class="fw-bold">
-                            <!-- Prices will be loaded from variants later -->
-                            <small class="text-muted">N/A</small>
+                            <span class="text-accent"><?= number_format($p['price'] ?? 0, 0, ',', '.') ?>₫</span>
                         </td>
                         <td><span class="status-badge <?= $p['status'] ?>"><?= $p['status'] === 'active' ? 'Hiển thị' : 'Ẩn' ?></span></td>
                         <td>

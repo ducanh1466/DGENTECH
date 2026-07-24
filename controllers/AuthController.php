@@ -11,6 +11,11 @@ class AuthController
 
     public function login()
     {
+        if (isset($_SESSION['user'])) {
+            header('Location: ' . ($_SESSION['user']['role'] == 1 ? BASE_URL . '?action=admin' : BASE_URL));
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
@@ -41,6 +46,11 @@ class AuthController
 
     public function register()
     {
+        if (isset($_SESSION['user'])) {
+            header('Location: ' . ($_SESSION['user']['role'] == 1 ? BASE_URL . '?action=admin' : BASE_URL));
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $full_name = $_POST['full_name'] ?? '';
             $email = $_POST['email'] ?? '';
