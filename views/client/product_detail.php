@@ -17,35 +17,10 @@
         <div class="product-detail-section mb-4">
             <div class="row g-4">
                 <!-- Gallery -->
-                <!-- Gallery -->
                 <div class="col-lg-5">
                     <div class="product-gallery mb-3">
                         <div class="main-image">
                             <img src="<?= !empty($product['image']) ? htmlspecialchars($product['image']) : 'https://placehold.co/600x600/4361ee/ffffff?text=' . urlencode($product['product_name']) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>" id="mainProductImage">
-                        </div>
-                    </div>
-                    <!-- Thông số nổi bật -->
-                    <div class="fpt-specs-row">
-                        <div class="fpt-spec-item">
-                            <i class="bi bi-memory"></i>
-                            <div>
-                                <span>RAM</span>
-                                <strong><?= htmlspecialchars(!empty($product['ram']) ? $product['ram'] : 'N/A') ?></strong>
-                            </div>
-                        </div>
-                        <div class="fpt-spec-item">
-                            <i class="bi bi-phone"></i>
-                            <div>
-                                <span>Màn hình</span>
-                                <strong><?= htmlspecialchars(!empty($product['screen']) ? $product['screen'] : 'N/A') ?></strong>
-                            </div>
-                        </div>
-                        <div class="fpt-spec-item">
-                            <i class="bi bi-arrow-repeat"></i>
-                            <div>
-                                <span>Tần số quét</span>
-                                <strong><?= htmlspecialchars(!empty($product['refresh_rate']) ? $product['refresh_rate'] : 'N/A') ?></strong>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -70,31 +45,37 @@
                             <div class="row align-items-center">
                                 <div class="col-sm-12">
                                     <div class="d-flex align-items-end mb-1">
-                                        <div class="fpt-price-main"><?= number_format($displayPrice, 0, ',', '.') ?>₫</div>
+                                        <div class="fpt-price-main" id="displayPriceMain"><?= number_format($displayPrice, 0, ',', '.') ?> VNĐ</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="fpt-tradein-banner">
-                            <span>Thu cũ - Giảm thêm đến <strong>3.000.000đ</strong></span>
+                            <span>Thu cũ - Giảm thêm đến <strong>3.000.000 VNĐ</strong></span>
                             <a href="#">Định giá ngay <i class="bi bi-chevron-right"></i></a>
                         </div>
 
                         <?php if (!empty($variants)): ?>
                         <div class="mb-4">
                             <label class="fw-bold mb-2 d-block text-muted" style="font-size:0.9rem;">Tùy chọn phiên bản</label>
-                            <div class="d-flex gap-2 flex-wrap">
+                            <div class="d-flex gap-2 flex-wrap" id="variantContainer">
                                 <?php foreach ($variants as $idx => $v): ?>
                                     <button class="variant-btn fpt-style <?= $idx === 0 ? 'active' : '' ?>"
+                                        data-id="<?= $v['variant_id'] ?>"
                                         data-name="<?= htmlspecialchars($v['variant_name']) ?>"
-                                        data-stock="<?= isset($v['stock']) ? (int)$v['stock'] : 0 ?>">
+                                        data-price="<?= isset($v['price']) && $v['price'] !== '' ? $v['price'] : $displayPrice ?>"
+                                        data-stock="<?= isset($v['stock_quantity']) && $v['stock_quantity'] !== '' ? (int)$v['stock_quantity'] : 0 ?>">
                                         <?= htmlspecialchars($v['variant_name']) ?>
                                     </button>
                                 <?php endforeach; ?>
                             </div>
                             <div id="variantStockInfo" class="mt-2 text-danger fw-bold" style="font-size: 0.9rem; display: none;">
                                 <i class="bi bi-exclamation-circle"></i> Hết hàng
+                            </div>
+                            <!-- Thuộc tính của biến thể (Màu sắc, kích cỡ...) -->
+                            <div id="variantAttributesInfo" class="mt-2 text-muted" style="font-size: 0.9rem;">
+                                <!-- Điền bằng JS -->
                             </div>
                         </div>
                         <?php endif; ?>
@@ -104,11 +85,11 @@
                             <div class="fpt-promo-title">
                                 <span>Ưu đãi được hưởng:</span>
                                 <div>
-                                    <span class="promo-val"><?= number_format($displayPrice, 0, ',', '.') ?>₫</span>
+                                    <span class="promo-val"><?= number_format($displayPrice, 0, ',', '.') ?> VNĐ</span>
                                 </div>
                             </div>
                             <ul class="fpt-promo-list">
-                                <li><i class="bi bi-check-circle-fill"></i> Giảm ngay 500.000đ áp dụng đến cuối tháng</li>
+                                <li><i class="bi bi-check-circle-fill"></i> Giảm ngay 500.000 VNĐ áp dụng đến cuối tháng</li>
                                 <li><i class="bi bi-check-circle-fill"></i> Tặng thêm đến 2.5 triệu khi mua kèm phụ kiện</li>
                                 <li><i class="bi bi-check-circle-fill"></i> Trả góp 0% qua thẻ tín dụng</li>
                             </ul>
@@ -132,23 +113,54 @@
                 </div>
 
                 <script>
+                // Store variant attributes in a JS object
+                const variantsData = <?= json_encode($variants ?? []) ?>;
+
                 document.addEventListener('DOMContentLoaded', function() {
                     const variantBtns = document.querySelectorAll('.variant-btn.fpt-style');
                     const addToCartBtn = document.getElementById('addToCartDetail');
                     const buyNowBtn = document.getElementById('buyNowBtnDetail');
                     const stockInfo = document.getElementById('variantStockInfo');
+                    const priceMain = document.getElementById('displayPriceMain');
+                    const stickyPrice = document.getElementById('fptStickyPrice');
+                    const attributesInfo = document.getElementById('variantAttributesInfo');
 
                     variantBtns.forEach(btn => {
                         btn.addEventListener('click', function() {
                             variantBtns.forEach(b => b.classList.remove('active'));
                             this.classList.add('active');
 
+                            const variantId = this.getAttribute('data-id');
                             const variantName = this.getAttribute('data-name');
-                            const stock = parseInt(this.getAttribute('data-stock'));
+                            let price = parseInt(this.getAttribute('data-price'));
+                            if (isNaN(price)) {
+                                price = <?= (int)$displayPrice ?>;
+                            }
+                            const stock = parseInt(this.getAttribute('data-stock')) || 0;
                             
                             const baseName = "<?= addslashes($product['product_name']) ?>";
                             addToCartBtn.setAttribute('data-name', baseName + ' (' + variantName + ')');
+                            addToCartBtn.setAttribute('data-price', price);
                             
+                            // Format price
+                            const formattedPrice = new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ';
+                            if (priceMain) priceMain.textContent = formattedPrice;
+                            if (stickyPrice) stickyPrice.textContent = formattedPrice;
+
+                            // Update attributes display
+                            if (attributesInfo) {
+                                const variantData = variantsData.find(v => v.variant_id == variantId);
+                                if (variantData && variantData.attributes && variantData.attributes.length > 0) {
+                                    let attrHtml = '';
+                                    variantData.attributes.forEach(attr => {
+                                        attrHtml += `<span class="badge bg-secondary me-1">${attr.attribute_name}: ${attr.attribute_value}</span>`;
+                                    });
+                                    attributesInfo.innerHTML = attrHtml;
+                                } else {
+                                    attributesInfo.innerHTML = '';
+                                }
+                            }
+
                             // Check stock
                             if (stock <= 0) {
                                 addToCartBtn.disabled = true;
@@ -179,56 +191,128 @@
             </div>
         </div>
 
-        <!-- Tabs: Description / Specs / Reviews -->
-        <div class="product-detail-section product-tabs mb-4">
-            <ul class="nav nav-tabs mb-3" id="productTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#descPanel" type="button" role="tab">Mô tả</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specsPanel" type="button" role="tab">Thông số kỹ thuật</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviewsPanel" type="button" role="tab">Đánh giá</button>
-                </li>
-            </ul>
-            <div class="tab-content" id="productTabsContent">
-                <div class="tab-pane fade show active p-3" id="descPanel" role="tabpanel">
-                    <h5><?= htmlspecialchars($product['product_name']) ?></h5>
-                    <p><?= nl2br(htmlspecialchars($product['description'] ?? 'Sản phẩm này chưa có bài viết mô tả chi tiết.')) ?></p>
+        <!-- Grid Thông số kỹ thuật nổi bật (như FPT Shop) -->
+        <div class="product-specs-grid row g-3 mb-5 mt-4">
+            <div class="col-6 col-md-4">
+                <div class="p-3 border rounded text-center bg-light h-100 d-flex flex-column justify-content-center">
+                    <small class="text-muted d-block mb-1">Thương hiệu</small>
+                    <span class="fw-bold"><?= htmlspecialchars($product['brand_name'] ?? 'Đang cập nhật') ?></span>
                 </div>
-                <div class="tab-pane fade p-3" id="specsPanel" role="tabpanel">
-                    <table class="table table-bordered">
-                        <tbody>
-                            <tr>
-                                <th style="width: 30%">Thương hiệu</th>
-                                <td><?= htmlspecialchars($product['brand_name'] ?? 'Đang cập nhật') ?></td>
-                            </tr>
-                            <tr>
-                                <th>RAM</th>
-                                <td><?= htmlspecialchars(!empty($product['ram']) ? $product['ram'] : 'Đang cập nhật') ?></td>
-                            </tr>
-                            <tr>
-                                <th>Màn hình</th>
-                                <td><?= htmlspecialchars(!empty($product['screen']) ? $product['screen'] : 'Đang cập nhật') ?></td>
-                            </tr>
-                            <tr>
-                                <th>Tần số quét</th>
-                                <td><?= htmlspecialchars(!empty($product['refresh_rate']) ? $product['refresh_rate'] : 'Đang cập nhật') ?></td>
-                            </tr>
-                            <tr>
-                                <th>Bảo hành</th>
-                                <td><?= htmlspecialchars($product['warranty_period'] ?? '12') ?> tháng</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="p-3 border rounded text-center bg-light h-100 d-flex flex-column justify-content-center">
+                    <small class="text-muted d-block mb-1">Danh mục</small>
+                    <span class="fw-bold"><?= htmlspecialchars($product['category_name'] ?? 'Đang cập nhật') ?></span>
                 </div>
-                <div class="tab-pane fade p-3" id="reviewsPanel" role="tabpanel">
-                    <div class="text-center py-4">
-                        <i class="bi bi-chat-square-text" style="font-size:2.5rem;color:var(--text-muted)"></i>
-                        <p class="text-muted mt-2">Chức năng đánh giá sẽ được cập nhật sớm.</p>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="p-3 border rounded text-center bg-light h-100 d-flex flex-column justify-content-center">
+                    <small class="text-muted d-block mb-1">Bảo hành</small>
+                    <span class="fw-bold"><?= htmlspecialchars($product['warranty_period'] ?? '12') ?> tháng</span>
+                </div>
+            </div>
+            <?php if (isset($productAttributes) && is_array($productAttributes) && count($productAttributes) > 0): ?>
+                <?php foreach ($productAttributes as $attr): ?>
+                <div class="col-6 col-md-4">
+                    <div class="p-3 border rounded text-center bg-light h-100 d-flex flex-column justify-content-center">
+                        <small class="text-muted d-block mb-1"><?= htmlspecialchars($attr['attribute_name']) ?></small>
+                        <span class="fw-bold text-dark"><?= htmlspecialchars($attr['attribute_values']) ?></span>
                     </div>
                 </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- Vertical Sections: Description & Reviews -->
+        <div class="product-detail-section mb-5">
+            <div class="p-4 border rounded bg-white shadow-sm mb-5">
+                <h4 class="mb-4 fw-bold">Mô tả sản phẩm</h4>
+                <h5><?= htmlspecialchars($product['product_name']) ?></h5>
+                <p class="mt-3" style="line-height: 1.8; font-size: 1.05rem;"><?= nl2br(htmlspecialchars($product['description'] ?? 'Sản phẩm này chưa có bài viết mô tả chi tiết.')) ?></p>
+            </div>
+
+            <div class="p-4 border rounded bg-white shadow-sm" id="reviewsPanel">
+                <h4 class="mb-4 fw-bold">Đánh giá và bình luận</h4>
+                <div class="p-3">
+                    <?php if ($canReview): ?>
+                        <div class="review-form-container mb-5 p-4 border rounded shadow-sm bg-light">
+                            <h5 class="mb-3">Viết đánh giá của bạn</h5>
+                            <form action="<?= BASE_URL ?>?action=submit-review" method="POST">
+                                <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Đánh giá sao:</label>
+                                    <div class="rating-stars mb-2" style="font-size: 1.5rem; color: #ffc107; cursor: pointer;">
+                                        <i class="bi bi-star-fill star-select" data-val="1"></i>
+                                        <i class="bi bi-star-fill star-select" data-val="2"></i>
+                                        <i class="bi bi-star-fill star-select" data-val="3"></i>
+                                        <i class="bi bi-star-fill star-select" data-val="4"></i>
+                                        <i class="bi bi-star-fill star-select" data-val="5"></i>
+                                    </div>
+                                    <input type="hidden" name="rating" id="ratingValue" value="5">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label fw-bold">Nội dung đánh giá:</label>
+                                    <textarea class="form-control" name="comment" id="comment" rows="3" required placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-accent">Gửi đánh giá</button>
+                            </form>
+                        </div>
+                    <?php endif; ?>
+
+                    <h5 class="mb-4">Khách hàng đánh giá (<?= count($reviews ?? []) ?>)</h5>
+                    <?php if (empty($reviews)): ?>
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat-square-text" style="font-size:2.5rem;color:var(--text-muted)"></i>
+                            <p class="text-muted mt-2">Chưa có đánh giá nào cho sản phẩm này.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="reviews-list">
+                            <?php foreach ($reviews as $rev): ?>
+                                <div class="review-item mb-4 pb-3 border-bottom">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <img src="<?= !empty($rev['avatar']) ? htmlspecialchars($rev['avatar']) : 'https://placehold.co/50x50/e2e8f0/64748b?text=' . urlencode(substr($rev['full_name'], 0, 1)) ?>" alt="Avatar" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                        <div>
+                                            <h6 class="mb-0 fw-bold"><?= htmlspecialchars($rev['full_name']) ?></h6>
+                                            <div class="text-warning" style="font-size: 0.85rem;">
+                                                <?php for($i=1; $i<=5; $i++): ?>
+                                                    <i class="bi <?= $i <= $rev['rating'] ? 'bi-star-fill' : 'bi-star' ?>"></i>
+                                                <?php endfor; ?>
+                                            </div>
+                                        </div>
+                                        <div class="ms-auto text-muted" style="font-size: 0.85rem;">
+                                            <?= date('d/m/Y H:i', strtotime($rev['created_at'])) ?>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0 text-dark"><?= nl2br(htmlspecialchars($rev['comment'])) ?></p>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const stars = document.querySelectorAll('.star-select');
+                        const ratingInput = document.getElementById('ratingValue');
+                        
+                        stars.forEach(star => {
+                            star.addEventListener('click', function() {
+                                const val = parseInt(this.getAttribute('data-val'));
+                                ratingInput.value = val;
+                                
+                                stars.forEach((s, idx) => {
+                                    if (idx < val) {
+                                        s.classList.remove('bi-star');
+                                        s.classList.add('bi-star-fill');
+                                    } else {
+                                        s.classList.remove('bi-star-fill');
+                                        s.classList.add('bi-star');
+                                    }
+                                });
+                            });
+                        });
+                    });
+                </script>
             </div>
         </div>
 
@@ -260,7 +344,7 @@
                             <span class="product-category"><?= htmlspecialchars($p['category_name']) ?></span>
                             <a href="<?= BASE_URL ?>?action=product-detail&id=<?= $p['product_id'] ?>" class="product-name"><?= htmlspecialchars($p['product_name']) ?></a>
                             <div class="product-price-wrapper">
-                                <span class="price-sale"><?= number_format($p['price'] ?? 0, 0, ',', '.') ?>₫</span>
+                                <span class="price-sale"><?= number_format($p['price'] ?? 0, 0, ',', '.') ?> VNĐ</span>
                             </div>
                         </div>
                     </div>
@@ -287,7 +371,7 @@ $displayPrice = $product['price'] ?? 0;
             </div>
             <div class="d-flex align-items-center gap-4">
                 <div class="text-end d-none d-md-block">
-                    <div class="fpt-sticky-price"><?= number_format($displayPrice, 0, ',', '.') ?>₫</div>
+                    <div class="fpt-sticky-price" id="fptStickyPrice"><?= number_format($displayPrice, 0, ',', '.') ?> VNĐ</div>
                 </div>
                 <div class="d-flex gap-2">
                     <button class="btn btn-outline-danger px-3 rounded-pill" onclick="document.getElementById('addToCartDetail').click()"><i class="bi bi-cart-plus"></i></button>

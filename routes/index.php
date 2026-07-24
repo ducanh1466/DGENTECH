@@ -7,8 +7,11 @@ match ($action) {
     '/'                 => (new HomeController)->index(),
     'products'          => (new ProductController)->index(),
     'product-detail'    => (new ProductController)->detail(),
+    'submit-review'     => (new ProductController)->submitReview(),
     'cart'              => (new CartController)->index(),
     'checkout'          => (new CartController)->checkout(),
+    'check-discount'    => (new CartController)->checkDiscount(),
+    'order-success'     => (new CartController)->orderSuccess(),
     'login'             => (new AuthController)->login(),
     'register'          => (new AuthController)->register(),
     'logout'            => (new AuthController)->logout(),
@@ -24,6 +27,7 @@ match ($action) {
     'admin-orders'          => (new AdminController)->orders(),
     'admin-order-detail'    => (new AdminController)->orderDetail(),
     'admin-users'           => (new AdminController)->users(),
+    'admin-user-edit'       => (new AdminController)->userForm(),
 
     default => (new HomeController)->index(),
 };

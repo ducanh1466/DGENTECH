@@ -73,11 +73,11 @@
 }
 
 .admin-sidebar .sidebar-nav .nav-label {
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 0.75rem;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     padding: 14px 12px 6px;
 }
 
@@ -150,6 +150,35 @@
     color: var(--text-primary);
 }
 
+.stat-card .stat-details h3 {
+    margin: 0;
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+}
+
+.stat-card .stat-details p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ==========================================
+   GLOBAL ANIMATIONS & BUTTONS
+   ========================================== */
+.btn {
+    transition: all var(--transition-fast) ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================
+   ADMIN CARD (For Tables, Forms)
+   ========================================== */
 /* ==========================================
    MAIN CONTENT AREA
    ========================================== */
@@ -353,18 +382,20 @@
 }
 
 .admin-table td {
-    padding: 14px 16px;
+    padding: 18px 16px;
     vertical-align: middle;
     border-bottom: 1px solid var(--border-light);
     font-size: 0.9rem;
 }
 
 .admin-table tbody tr {
-    transition: background var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .admin-table tbody tr:hover {
     background: var(--bg-card-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .admin-table .product-thumb {

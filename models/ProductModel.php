@@ -6,39 +6,14 @@ class ProductModel extends BaseModel
     {
         parent::__construct();
         $this->table = 'tb_products';
-        try {
-            $this->pdo->exec('ALTER TABLE tb_products ADD COLUMN image VARCHAR(255) NULL');
-        } catch (PDOException $e) { }
-        try {
-            $this->pdo->exec('ALTER TABLE tb_products ADD COLUMN price INT NULL DEFAULT 0');
-        } catch (PDOException $e) { }
-        try {
-            $this->pdo->exec('ALTER TABLE tb_products ADD COLUMN ram VARCHAR(255) NULL');
-        } catch (PDOException $e) { }
-        try {
-            $this->pdo->exec('ALTER TABLE tb_products ADD COLUMN screen VARCHAR(255) NULL');
-        } catch (PDOException $e) { }
-        try {
-            $this->pdo->exec('ALTER TABLE tb_products ADD COLUMN refresh_rate VARCHAR(255) NULL');
-        } catch (PDOException $e) { }
-        try {
-            $this->pdo->exec("CREATE TABLE IF NOT EXISTS tb_product_variants (
-                variant_id INT AUTO_INCREMENT PRIMARY KEY,
-                product_id INT NOT NULL,
-                variant_name VARCHAR(255) NOT NULL,
-                price INT NOT NULL DEFAULT 0,
-                stock INT NOT NULL DEFAULT 0,
-                FOREIGN KEY (product_id) REFERENCES tb_products(product_id) ON DELETE CASCADE
-            )");
-        } catch (PDOException $e) { }
-        try {
-            $this->pdo->exec('ALTER TABLE tb_product_variants ADD COLUMN stock INT NOT NULL DEFAULT 0');
-        } catch (PDOException $e) { }
     }
 
     public function getAllProducts()
     {
-        $sql = "SELECT p.*, c.category_name, b.brand_name 
+        // Get products with their primary image and minimum variant price
+        $sql = "SELECT p.*, c.category_name, b.brand_name,
+                       (SELECT image_url FROM tb_product_images WHERE product_id = p.product_id AND is_primary = 1 LIMIT 1) as image,
+                       (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) as price
                 FROM {$this->table} p
                 LEFT JOIN tb_categories c ON p.category_id = c.category_id
                 LEFT JOIN tb_brands b ON p.brand_id = b.brand_id
@@ -50,16 +25,16 @@ class ProductModel extends BaseModel
 
     public function getLatestProducts($limit = 8)
     {
-        $sql = "SELECT p.*, c.category_name, b.brand_name 
-
+        $sql = "SELECT p.*, c.category_name, b.brand_name,
+                       (SELECT image_url FROM tb_product_images WHERE product_id = p.product_id AND is_primary = 1 LIMIT 1) as image,
+                       (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) as price
                 FROM {$this->table} p
                 LEFT JOIN tb_categories c ON p.category_id = c.category_id
                 LEFT JOIN tb_brands b ON p.brand_id = b.brand_id
-                WHERE p.status = 'active'
+                WHERE p.status = 'active' OR p.status = 1
                 ORDER BY p.product_id DESC 
                 LIMIT :limit";
         $stmt = $this->pdo->prepare($sql);
-        // BindValue is needed for LIMIT in PDO
         $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -67,7 +42,9 @@ class ProductModel extends BaseModel
 
     public function getProductById($id)
     {
-        $sql = "SELECT p.*, c.category_name, b.brand_name 
+        $sql = "SELECT p.*, c.category_name, b.brand_name,
+                       (SELECT image_url FROM tb_product_images WHERE product_id = p.product_id AND is_primary = 1 LIMIT 1) as image,
+                       (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) as price
                 FROM {$this->table} p
                 LEFT JOIN tb_categories c ON p.category_id = c.category_id
                 LEFT JOIN tb_brands b ON p.brand_id = b.brand_id
@@ -77,22 +54,64 @@ class ProductModel extends BaseModel
         return $stmt->fetch();
     }
 
-    public function getVariantsByProductId($product_id)
+    public function getProductImages($product_id)
     {
-        $sql = "SELECT * FROM tb_product_variants WHERE product_id = :product_id ORDER BY variant_id ASC";
+        $sql = "SELECT * FROM tb_product_images WHERE product_id = :product_id ORDER BY display_order ASC";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['product_id' => $product_id]);
         return $stmt->fetchAll();
     }
 
+    public function getProductAttributes($product_id)
+    {
+        $sql = "SELECT a.attribute_name, GROUP_CONCAT(DISTINCT av.attribute_value ORDER BY av.attribute_value ASC SEPARATOR ', ') as attribute_values
+                FROM tb_product_variants pv
+                JOIN tb_variant_attributes va ON pv.variant_id = va.variant_id
+                JOIN tb_attribute_values av ON va.attribute_value_id = av.attribute_value_id
+                JOIN tb_attributes a ON av.attribute_id = a.attribute_id
+                WHERE pv.product_id = :product_id
+                GROUP BY a.attribute_name";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['product_id' => $product_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getVariantsByProductId($product_id)
+    {
+        // Lấy tất cả biến thể
+        $sql = "SELECT * FROM tb_product_variants WHERE product_id = :product_id AND status = 1 ORDER BY variant_id ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['product_id' => $product_id]);
+        $variants = $stmt->fetchAll();
+
+        // Gắn thêm thuộc tính cho mỗi biến thể
+        foreach ($variants as &$variant) {
+            $variant['attributes'] = $this->getVariantAttributes($variant['variant_id']);
+        }
+
+        return $variants;
+    }
+
+    public function getVariantAttributes($variant_id)
+    {
+        $sql = "SELECT a.attribute_name, av.attribute_value, av.attribute_value_id, a.attribute_id
+                FROM tb_variant_attributes va
+                JOIN tb_attribute_values av ON va.attribute_value_id = av.attribute_value_id
+                JOIN tb_attributes a ON av.attribute_id = a.attribute_id
+                WHERE va.variant_id = :variant_id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['variant_id' => $variant_id]);
+        return $stmt->fetchAll();
+    }
+
     public function getProductsByCategory($category_id, $limit = 4, $exclude_id = 0)
     {
-        $sql = "SELECT p.*, c.category_name, b.brand_name
-
+        $sql = "SELECT p.*, c.category_name, b.brand_name,
+                       (SELECT image_url FROM tb_product_images WHERE product_id = p.product_id AND is_primary = 1 LIMIT 1) as image,
+                       (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) as price
                 FROM {$this->table} p
                 LEFT JOIN tb_categories c ON p.category_id = c.category_id
                 LEFT JOIN tb_brands b ON p.brand_id = b.brand_id
-                WHERE p.category_id = :category_id AND p.product_id != :exclude_id AND p.status = 'active'
+                WHERE p.category_id = :category_id AND p.product_id != :exclude_id AND (p.status = 'active' OR p.status = 1)
                 ORDER BY p.product_id DESC 
                 LIMIT :limit";
         $stmt = $this->pdo->prepare($sql);
@@ -103,10 +122,11 @@ class ProductModel extends BaseModel
         return $stmt->fetchAll();
     }
 
-    public function insertProduct($category_id, $product_name, $brand_id, $warranty_period = null, $description = null, $status = 'active', $image = null, $price = 0, $ram = null, $screen = null, $refresh_rate = null)
+    // Insert Product (Basic info)
+    public function insertProduct($category_id, $product_name, $brand_id, $warranty_period = null, $description = null, $status = 1)
     {
-        $sql = "INSERT INTO {$this->table} (category_id, product_name, brand_id, warranty_period, description, status, image, price, ram, screen, refresh_rate) 
-                VALUES (:category_id, :product_name, :brand_id, :warranty_period, :description, :status, :image, :price, :ram, :screen, :refresh_rate)";
+        $sql = "INSERT INTO {$this->table} (category_id, product_name, brand_id, warranty_period, description, status) 
+                VALUES (:category_id, :product_name, :brand_id, :warranty_period, :description, :status)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             'category_id' => $category_id,
@@ -114,45 +134,28 @@ class ProductModel extends BaseModel
             'brand_id' => $brand_id,
             'warranty_period' => $warranty_period,
             'description' => $description,
-            'status' => $status,
-            'image' => $image,
-            'price' => $price,
-            'ram' => $ram,
-            'screen' => $screen,
-            'refresh_rate' => $refresh_rate
+            'status' => $status
         ]);
         return $this->pdo->lastInsertId();
     }
 
-    public function updateProduct($id, $category_id, $product_name, $brand_id, $warranty_period = null, $description = null, $status = 'active', $image = null, $price = 0, $ram = null, $screen = null, $refresh_rate = null)
+    // Update Product (Basic info)
+    public function updateProduct($id, $category_id, $product_name, $brand_id, $warranty_period = null, $description = null, $status = 1)
     {
         $sql = "UPDATE {$this->table} 
                 SET category_id = :category_id, product_name = :product_name, brand_id = :brand_id, 
-                    warranty_period = :warranty_period, description = :description, status = :status, price = :price,
-                    ram = :ram, screen = :screen, refresh_rate = :refresh_rate";
-        $params = [
+                    warranty_period = :warranty_period, description = :description, status = :status
+                WHERE product_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
             'id' => $id,
             'category_id' => $category_id,
             'product_name' => $product_name,
             'brand_id' => $brand_id,
             'warranty_period' => $warranty_period,
             'description' => $description,
-            'status' => $status,
-            'price' => $price,
-            'ram' => $ram,
-            'screen' => $screen,
-            'refresh_rate' => $refresh_rate
-        ];
-
-        if ($image !== null) {
-            $sql .= ", image = :image";
-            $params['image'] = $image;
-        }
-
-        $sql .= " WHERE product_id = :id";
-        
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute($params);
+            'status' => $status
+        ]);
     }
 
     public function deleteProduct($id)
@@ -162,22 +165,224 @@ class ProductModel extends BaseModel
         return $stmt->execute(['id' => $id]);
     }
 
-    public function insertVariant($product_id, $variant_name, $price, $stock = 0)
+    // Insert Product Image
+    public function insertProductImage($product_id, $image_url, $display_order = 1, $is_primary = 1)
     {
-        $sql = "INSERT INTO tb_product_variants (product_id, variant_name, price, stock) VALUES (:product_id, :variant_name, :price, :stock)";
+        $sql = "INSERT INTO tb_product_images (product_id, image_url, display_order, is_primary) 
+                VALUES (:product_id, :image_url, :display_order, :is_primary)";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
             'product_id' => $product_id,
+            'image_url' => $image_url,
+            'display_order' => $display_order,
+            'is_primary' => $is_primary
+        ]);
+    }
+
+    public function deleteProductImages($product_id)
+    {
+        $sql = "DELETE FROM tb_product_images WHERE product_id = :product_id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['product_id' => $product_id]);
+    }
+
+    // Variants
+    public function insertVariant($product_id, $variant_name, $price, $stock_quantity = 0, $status = 1)
+    {
+        $sql = "INSERT INTO tb_product_variants (product_id, variant_name, price, stock_quantity, status) 
+                VALUES (:product_id, :variant_name, :price, :stock_quantity, :status)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'product_id' => $product_id,
             'variant_name' => $variant_name,
             'price' => $price,
-            'stock' => $stock
+            'stock_quantity' => $stock_quantity,
+            'status' => $status
         ]);
+        return $this->pdo->lastInsertId();
+    }
+
+    public function insertVariantAttribute($variant_id, $attribute_value_id)
+    {
+        $sql = "INSERT INTO tb_variant_attributes (variant_id, attribute_value_id) VALUES (:variant_id, :attribute_value_id)";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'variant_id' => $variant_id,
+            'attribute_value_id' => $attribute_value_id
+        ]);
+    }
+
+    public function updateVariant($variant_id, $variant_name, $price, $stock_quantity)
+    {
+        $sql = "UPDATE tb_product_variants 
+                SET variant_name = :variant_name, price = :price, stock_quantity = :stock_quantity 
+                WHERE variant_id = :variant_id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'variant_id' => $variant_id,
+            'variant_name' => $variant_name,
+            'price' => $price,
+            'stock_quantity' => $stock_quantity
+        ]);
+    }
+
+    public function deleteUnusedVariants($product_id, $keep_variant_ids = [])
+    {
+        try {
+            if (empty($keep_variant_ids)) {
+                $sql = "DELETE FROM tb_product_variants WHERE product_id = :product_id AND variant_id NOT IN (SELECT variant_id FROM tb_order_items)";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute(['product_id' => $product_id]);
+            } else {
+                $placeholders = implode(',', array_fill(0, count($keep_variant_ids), '?'));
+                $sql = "DELETE FROM tb_product_variants 
+                        WHERE product_id = ? 
+                        AND variant_id NOT IN ($placeholders)
+                        AND variant_id NOT IN (SELECT variant_id FROM tb_order_items)";
+                $stmt = $this->pdo->prepare($sql);
+                $params = array_merge([$product_id], $keep_variant_ids);
+                $stmt->execute($params);
+            }
+        } catch (PDOException $e) {
+            // Ignore if there are still foreign key constraints we didn't catch
+        }
     }
 
     public function deleteVariantsByProductId($product_id)
     {
-        $sql = "DELETE FROM tb_product_variants WHERE product_id = :product_id";
+        try {
+            $sql = "DELETE FROM tb_product_variants WHERE product_id = :product_id";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute(['product_id' => $product_id]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function getAttributesForFilter()
+    {
+        $sql = "SELECT a.attribute_id, a.attribute_name, av.attribute_value_id, av.attribute_value 
+                FROM tb_attributes a
+                JOIN tb_attribute_values av ON a.attribute_id = av.attribute_id
+                WHERE av.attribute_value_id IN (
+                    SELECT DISTINCT va.attribute_value_id 
+                    FROM tb_variant_attributes va
+                    JOIN tb_product_variants pv ON va.variant_id = pv.variant_id
+                    JOIN tb_products p ON pv.product_id = p.product_id
+                    WHERE p.status = 1 OR p.status = 'active'
+                )
+                ORDER BY a.attribute_name, av.attribute_value";
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute(['product_id' => $product_id]);
+        $stmt->execute();
+        $results = $stmt->fetchAll();
+
+        $attributes = [];
+        foreach ($results as $row) {
+            $attr_id = $row['attribute_id'];
+            if (!isset($attributes[$attr_id])) {
+                $attributes[$attr_id] = [
+                    'attribute_name' => $row['attribute_name'],
+                    'values' => []
+                ];
+            }
+            $attributes[$attr_id]['values'][] = [
+                'attribute_value_id' => $row['attribute_value_id'],
+                'attribute_value' => $row['attribute_value']
+            ];
+        }
+        return $attributes;
+    }
+
+    private function buildFilterQuery($keyword, $categories, $brands, $attributeValues, $minPrice, $maxPrice, $sort, $isCount = false)
+    {
+        if ($isCount) {
+            $sql = "SELECT COUNT(*) as total FROM tb_products p WHERE (p.status = 'active' OR p.status = 1)";
+        } else {
+            $sql = "SELECT p.*, c.category_name, b.brand_name,
+                           (SELECT image_url FROM tb_product_images WHERE product_id = p.product_id AND is_primary = 1 LIMIT 1) as image,
+                           (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) as price
+                    FROM tb_products p
+                    LEFT JOIN tb_categories c ON p.category_id = c.category_id
+                    LEFT JOIN tb_brands b ON p.brand_id = b.brand_id
+                    WHERE (p.status = 'active' OR p.status = 1)";
+        }
+
+        $params = [];
+
+        if (!empty($keyword)) {
+            $sql .= " AND p.product_name LIKE :keyword";
+            $params['keyword'] = "%{$keyword}%";
+        }
+
+        if (!empty($categories)) {
+            $catIds = implode(',', array_map('intval', $categories));
+            $sql .= " AND p.category_id IN ($catIds)";
+        }
+
+        if (!empty($brands)) {
+            $brandIds = implode(',', array_map('intval', $brands));
+            $sql .= " AND p.brand_id IN ($brandIds)";
+        }
+
+        if (!empty($attributeValues)) {
+            $attrIds = implode(',', array_map('intval', $attributeValues));
+            $sql .= " AND p.product_id IN (
+                SELECT pv.product_id 
+                FROM tb_product_variants pv
+                JOIN tb_variant_attributes va ON pv.variant_id = va.variant_id
+                WHERE va.attribute_value_id IN ($attrIds)
+            )";
+        }
+
+        if ($minPrice > 0) {
+            $sql .= " AND (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) >= :minPrice";
+            $params['minPrice'] = $minPrice;
+        }
+        if ($maxPrice > 0) {
+            $sql .= " AND (SELECT MIN(price) FROM tb_product_variants WHERE product_id = p.product_id) <= :maxPrice";
+            $params['maxPrice'] = $maxPrice;
+        }
+
+        if (!$isCount) {
+            if ($sort == 'price_asc') {
+                $sql .= " ORDER BY price ASC";
+            } elseif ($sort == 'price_desc') {
+                $sql .= " ORDER BY price DESC";
+            } else {
+                $sql .= " ORDER BY p.product_id DESC";
+            }
+        }
+
+        return [$sql, $params];
+    }
+
+    public function getProductsFiltered($keyword, $categories, $brands, $attributeValues, $minPrice, $maxPrice, $sort, $limit, $offset)
+    {
+        list($sql, $params) = $this->buildFilterQuery($keyword, $categories, $brands, $attributeValues, $minPrice, $maxPrice, $sort);
+
+        $sql .= " LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function countProductsFiltered($keyword, $categories, $brands, $attributeValues, $minPrice, $maxPrice)
+    {
+        list($sql, $params) = $this->buildFilterQuery($keyword, $categories, $brands, $attributeValues, $minPrice, $maxPrice, '', true);
+
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result ? $result['total'] : 0;
     }
 }

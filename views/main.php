@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DGENTECH - Cửa hàng đồ điện tử chính hãng. Laptop, điện thoại, tablet, phụ kiện công nghệ giá tốt nhất.">
+    <meta name="description"
+        content="DGENTECH - Cửa hàng đồ điện tử chính hãng. Laptop, điện thoại, tablet, phụ kiện công nghệ giá tốt nhất.">
 
     <title><?= $title ?? 'DGENTECH - Cửa hàng điện tử' ?></title>
 
@@ -13,34 +14,19 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="<?= BASE_CSS ?>style.css" rel="stylesheet">
+    <link href="<?= BASE_CSS ?>style.css?v=<?= time() ?>" rel="stylesheet">
 </head>
 
 <body>
 
-    <!-- ========== TOP BAR ========== -->
-    <div class="top-bar d-none d-md-block">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex gap-4">
-                    <span><i class="bi bi-telephone"></i> Hotline: 1900 8888</span>
-                    <span><i class="bi bi-envelope"></i> support@dgentech.vn</span>
-                </div>
-                <div class="d-flex gap-3">
-                    <a href="<?= BASE_URL ?>?action=account"><i class="bi bi-geo-alt"></i> Tra cứu đơn hàng</a>
-                    <a href="#"><i class="bi bi-shield-check"></i> Bảo hành</a>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- ========== MAIN NAVBAR ========== -->
     <nav class="main-navbar">
         <div class="container">
             <div class="d-flex align-items-center justify-content-between gap-3">
                 <!-- Brand -->
-                <a href="<?= BASE_URL ?>" class="navbar-brand-custom">
-                    <i class="bi bi-cpu"></i> DGENTECH
+                <a href="<?= BASE_URL ?>" class="navbar-brand-custom d-flex align-items-center">
+                    <img src="<?= BASE_URL ?>assets/uploads/logo.jpg" alt="DGENTECH Logo" style="height: 55px; object-fit: contain; transform: scale(1.2); transform-origin: left center;">
                 </a>
 
                 <!-- Search Box -->
@@ -71,16 +57,21 @@
                     <!-- User -->
                     <?php if (isset($_SESSION['user'])): ?>
                         <div class="dropdown">
-                            <a href="#" class="btn-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">
+                            <a href="#" class="btn-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+                                style="text-decoration: none;">
                                 <i class="bi bi-person-check-fill text-accent"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <?php if ($_SESSION['user']['role'] == 1): ?>
                                     <li><a class="dropdown-item" href="<?= BASE_URL ?>?action=admin">Quản trị Admin</a></li>
                                 <?php endif; ?>
-                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?action=account">Tài khoản của tôi</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>?action=logout">Đăng xuất</a></li>
+                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?action=account">Tài khoản của tôi</a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>?action=logout">Đăng xuất</a>
+                                </li>
                             </ul>
                         </div>
                     <?php else: ?>
@@ -153,7 +144,8 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-brand mb-3"><i class="bi bi-cpu"></i> DGENTECH</div>
                     <p class="mb-3" style="font-size:0.9rem;">
-                        Cửa hàng công nghệ uy tín hàng đầu Việt Nam. Chuyên cung cấp laptop, điện thoại, tablet và phụ kiện chính hãng với giá tốt nhất.
+                        Cửa hàng công nghệ uy tín hàng đầu Việt Nam. Chuyên cung cấp laptop, điện thoại, tablet và phụ
+                        kiện chính hãng với giá tốt nhất.
                     </p>
                     <div class="footer-social d-flex gap-2">
                         <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
@@ -222,6 +214,21 @@
     <script src="<?= BASE_JS ?>main.js"></script>
     <script src="<?= BASE_JS ?>cart.js"></script>
 
+    <script>
+        // Auto-dismiss alerts after 2 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                var alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                });
+            }, 2000);
+        });
+    </script>
 </body>
 
 </html>

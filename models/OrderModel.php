@@ -29,7 +29,7 @@ class OrderModel extends BaseModel
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
     }
-    
+
     public function getOrdersByUserId($user_id)
     {
         $sql = "SELECT * FROM {$this->table} WHERE user_id = :user_id ORDER BY order_id DESC";
@@ -38,10 +38,10 @@ class OrderModel extends BaseModel
         return $stmt->fetchAll();
     }
 
-    public function insertOrder($user_id, $discount_id = null, $total_amount, $status = 'pending', $recipient_name, $recipient_phone, $shipping_address, $note = null)
+    public function insertOrder($user_id, $discount_id = null, $total_amount, $status = 'pending', $recipient_name, $recipient_phone, $shipping_address, $note = null, $payment_method = 'cod', $payment_status = 'unpaid')
     {
-        $sql = "INSERT INTO {$this->table} (user_id, discount_id, total_amount, status, recipient_name, recipient_phone, shipping_address, note, order_date) 
-                VALUES (:user_id, :discount_id, :total_amount, :status, :recipient_name, :recipient_phone, :shipping_address, :note, NOW())";
+        $sql = "INSERT INTO {$this->table} (user_id, discount_id, total_amount, status, recipient_name, recipient_phone, shipping_address, note, payment_method, payment_status, order_date) 
+                VALUES (:user_id, :discount_id, :total_amount, :status, :recipient_name, :recipient_phone, :shipping_address, :note, :payment_method, :payment_status, NOW())";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             'user_id' => $user_id,
@@ -51,7 +51,9 @@ class OrderModel extends BaseModel
             'recipient_name' => $recipient_name,
             'recipient_phone' => $recipient_phone,
             'shipping_address' => $shipping_address,
-            'note' => $note
+            'note' => $note,
+            'payment_method' => $payment_method,
+            'payment_status' => $payment_status
         ]);
         return $this->pdo->lastInsertId();
     }
@@ -64,5 +66,61 @@ class OrderModel extends BaseModel
             'status' => $status,
             'id' => $id
         ]);
+    }
+
+    public function countTotalOrders()
+    {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table}";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetch()['total'] ?? 0;
+    }
+
+    public function getTotalRevenue()
+    {
+        $sql = "SELECT SUM(total_amount) as total FROM {$this->table} WHERE status = 'completed'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetch()['total'] ?? 0;
+    }
+
+    public function getRecentOrders($limit = 5)
+    {
+        $sql = "SELECT o.*, u.full_name as user_full_name 
+                FROM {$this->table} o
+                LEFT JOIN tb_users u ON o.user_id = u.user_id
+                ORDER BY o.order_id DESC LIMIT :limit";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getMonthlyRevenue($year)
+    {
+        $sql = "SELECT MONTH(order_date) as month, SUM(total_amount) as revenue, COUNT(order_id) as orders
+                FROM {$this->table} 
+                WHERE YEAR(order_date) = :year AND status = 'completed'
+                GROUP BY MONTH(order_date)
+                ORDER BY MONTH(order_date)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['year' => $year]);
+        return $stmt->fetchAll();
+    }
+
+    public function getAvailableYears()
+    {
+        $sql = "SELECT DISTINCT YEAR(order_date) as year FROM {$this->table} ORDER BY year DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Ensure current year is always in the list
+        $currentYear = (string)date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+            rsort($years);
+        }
+        return $years;
     }
 }

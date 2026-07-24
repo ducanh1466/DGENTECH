@@ -198,4 +198,35 @@ document.addEventListener('DOMContentLoaded', function () {
             DGENCart.addItem(product);
         });
     }
+
+    // Handle detail page "Buy Now"
+    const buyNowBtnDetail = document.getElementById('buyNowBtnDetail');
+    if (buyNowBtnDetail && addToCartDetail) {
+        buyNowBtnDetail.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Simulate add to cart
+            const qtyInput = document.querySelector('.quantity-selector .qty-input');
+            const product = {
+                id: addToCartDetail.getAttribute('data-id'),
+                name: addToCartDetail.getAttribute('data-name'),
+                price: parseInt(addToCartDetail.getAttribute('data-price')),
+                image: addToCartDetail.getAttribute('data-image'),
+                category: addToCartDetail.getAttribute('data-category') || '',
+                quantity: qtyInput ? parseInt(qtyInput.value) : 1
+            };
+            
+            // Add item to cart without showing toast
+            let cart = JSON.parse(localStorage.getItem(DGENCart.cartKey)) || [];
+            const existingItem = cart.find(item => item.id === product.id && item.name === product.name);
+            if (existingItem) {
+                existingItem.quantity += product.quantity;
+            } else {
+                cart.push(product);
+            }
+            localStorage.setItem(DGENCart.cartKey, JSON.stringify(cart));
+            
+            // Redirect to checkout directly for "Buy Now"
+            window.location.href = '?action=checkout';
+        });
+    }
 });

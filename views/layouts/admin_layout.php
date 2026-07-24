@@ -11,8 +11,8 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="<?= BASE_CSS ?>style.css" rel="stylesheet">
-    <link href="<?= BASE_CSS ?>admin.css" rel="stylesheet">
+    <link href="<?= BASE_CSS ?>style.css?v=<?= time() ?>" rel="stylesheet">
+    <link href="<?= BASE_CSS ?>admin.css?v=<?= time() ?>" rel="stylesheet">
 </head>
 
 <body>
@@ -25,8 +25,9 @@
         <!-- ========== SIDEBAR ========== -->
         <aside class="admin-sidebar">
             <div class="sidebar-header">
-                <a href="<?= BASE_URL ?>?action=admin" class="sidebar-brand">
-                    <i class="bi bi-cpu"></i> DGENTECH <small>Admin</small>
+                <a href="<?= BASE_URL ?>?action=admin" class="sidebar-brand p-2 d-flex justify-content-center">
+                    <img src="<?= BASE_URL ?>assets/uploads/logo.jpg" alt="DGENTECH Logo"
+                        style="height: 50px; object-fit: contain; max-width: 100%; transform: scale(1.1);">
                 </a>
                 <button class="sidebar-close" id="sidebarCloseBtn">
                     <i class="bi bi-x-lg"></i>
@@ -34,57 +35,71 @@
             </div>
 
             <nav class="sidebar-nav">
-                <div class="nav-label">Menu chính</div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($action ?? '') === 'admin' ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin">
-                            <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                        </a>
-                    </li>
-                </ul>
+                <?php if ($_SESSION['user']['role'] == 1): ?>
+                    <div class="nav-label">Hệ Thống</div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link <?= ($action ?? '') === 'admin' ? 'active' : '' ?>"
+                                href="<?= BASE_URL ?>?action=admin">
+                                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                            </a>
+                        </li>
+                    </ul>
+                <?php endif; ?>
 
-                <div class="nav-label">Quản lý</div>
+                <div class="nav-label">Quản Trị Hệ Thống</div>
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link <?= in_array($action ?? '', ['admin-products', 'admin-product-create', 'admin-product-edit']) ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-products">
+                        <a class="nav-link <?= in_array($action ?? '', ['admin-products', 'admin-product-create', 'admin-product-edit']) ? 'active' : '' ?>"
+                            href="<?= BASE_URL ?>?action=admin-products">
                             <i class="bi bi-box-seam"></i> Sản phẩm
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= ($action ?? '') === 'admin-categories' ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-categories">
+                        <a class="nav-link <?= ($action ?? '') === 'admin-categories' ? 'active' : '' ?>"
+                            href="<?= BASE_URL ?>?action=admin-categories">
                             <i class="bi bi-tags"></i> Danh mục
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= ($action ?? '') === 'admin-brands' ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-brands">
+                        <a class="nav-link <?= ($action ?? '') === 'admin-brands' ? 'active' : '' ?>"
+                            href="<?= BASE_URL ?>?action=admin-brands">
                             <i class="bi bi-star"></i> Thương hiệu
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= in_array($action ?? '', ['admin-orders', 'admin-order-detail']) ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-orders">
-                            <i class="bi bi-receipt"></i> Đơn hàng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($action ?? '') === 'admin-users' ? 'active' : '' ?>" href="<?= BASE_URL ?>?action=admin-users">
-                            <i class="bi bi-people"></i> Người dùng
-                        </a>
-                    </li>
+                    <?php if ($_SESSION['user']['role'] == 1): ?>
+                        <li class="nav-item">
+                            <a class="nav-link <?= in_array($action ?? '', ['admin-orders', 'admin-order-detail']) ? 'active' : '' ?>"
+                                href="<?= BASE_URL ?>?action=admin-orders">
+                                <i class="bi bi-receipt"></i> Đơn hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= ($action ?? '') === 'admin-users' ? 'active' : '' ?>"
+                                href="<?= BASE_URL ?>?action=admin-users">
+                                <i class="bi bi-people"></i> Tài Khoản
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 </ul>
 
-                <div class="nav-label">Hệ thống</div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-gear"></i> Cài đặt
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= BASE_URL ?>">
-                            <i class="bi bi-globe"></i> Xem website
-                        </a>
-                    </li>
-                </ul>
+                <?php if ($_SESSION['user']['role'] == 1): ?>
+                    <div class="nav-label">Tùy Chọn </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="bi bi-gear"></i> Cài đặt
+                            </a>
+                        </li>
+                    <?php else: ?>
+                        <ul class="nav flex-column">
+                        <?php endif; ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= BASE_URL ?>">
+                                <i class="bi bi-globe"></i> Xem website
+                            </a>
+                        </li>
+                    </ul>
             </nav>
 
             <div class="sidebar-footer">
@@ -144,6 +159,21 @@
     <!-- Custom JS -->
     <script src="<?= BASE_JS ?>main.js"></script>
     <script src="<?= BASE_JS ?>admin.js"></script>
+    <script>
+        // Auto-dismiss alerts after 2 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                var alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function (alert) {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function () {
+                        alert.remove();
+                    }, 500);
+                });
+            }, 2000);
+        });
+    </script>
 
 </body>
 
